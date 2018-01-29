@@ -32,6 +32,7 @@ void clear_ttt(char *game_board);
 void print_game(struct ttt_game_state *game);
 void get_initials(struct ttt_player_state *p);
 void initialize_rematch(struct ttt_game_state *game, char winner);
+void process_command(struct ttt_game_state *game, struct ttt_player_state *p);
 int process_game(struct ttt_game_state *game);
 void process_player(struct ttt_game_state *game, struct ttt_player_state *p);
 int check_win(struct ttt_game_state *game, struct ttt_player_state *p);
