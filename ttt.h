@@ -12,6 +12,7 @@ typedef struct ttt_player_state{
 typedef struct ttt_game_state{
  
 	char state;
+	char prev_state;
 	char turns;
 
 	struct ttt_player_state *p1;

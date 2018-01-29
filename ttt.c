@@ -39,6 +39,7 @@ void main(){
 void initialize_game(struct ttt_game_state **game){
 	*game = malloc(sizeof(struct ttt_game_state));
 	(*game)->state = -1;
+	(*game)->prev_state = -1;
 	(*game)->turns = 0;
 
 	initialize_player(&((*game)->p1), P1_SYMBOL);
@@ -69,8 +70,8 @@ void place_score(struct ttt_game_state **game){
 }
  
 void update_score(char *score_board, char p1, char p2){
-	score_board[SCORE_BOARD_P1_POS] = p1;
-	score_board[SCORE_BOARD_P2_POS] = p2;
+	score_board[SCORE_BOARD_P1_POS] = 48 + p1;
+	score_board[SCORE_BOARD_P2_POS] = 48 + p2;
 }
  
 void place_border(char *game_board){
@@ -118,7 +119,7 @@ void clear_ttt(char *game_board){
 void print_game(struct ttt_game_state *game){
  
 	int i;
-	printf("%s", game->score_board);
+	printf("\n%s", game->score_board);
 	for(i = 0; i < GAME_BOARD_ROWS * GAME_BOARD_COLS; i++){
 		
 		if(game->state == 1 && i == (game->p1->location_x + (game->p1->location_y * GAME_BOARD_COLS))){
@@ -138,8 +139,8 @@ void print_game(struct ttt_game_state *game){
 void initialize_rematch(struct ttt_game_state *game, char winner){
 	clear_ttt(game->game_board);
 	game->turns = 0;
+	game->prev_state = game->state;
 	game->state = winner;
-               
 }
  
 int process_game(struct ttt_game_state *game){
@@ -152,6 +153,7 @@ int process_game(struct ttt_game_state *game){
 			printf("Please enter 3 initials for Player 2: ");
 			fflush(stdout);
 			//get_initials(game->p2);
+			game->prev_state = game->state;
 			game->state = 1;
 		break;
 		case 0:
@@ -167,12 +169,15 @@ int process_game(struct ttt_game_state *game){
 		case 3:
 			printf("Would you like to play again? y/n: \n");
 			fflush(stdout);
+			process_command(game, game->p1);
 		break;
 		case 4:
 			printf("Are you sure you'd like to quit? y/n: \n");
 			fflush(stdout);
+			process_command(game, game->p1);
 		break;
 	}
+	update_score(game->score_board, game->p1->wins, game->p2->wins);
 	print_game(game);
 
 	return game->state;
@@ -221,21 +226,31 @@ void process_command(struct ttt_game_state *game, struct ttt_player_state *p){
 					game->turns += 1;
 					printf("Place\n");
 					
+					game->prev_state = game->state;
 					if(check_win(game, p)){
+						p->wins += 1;
 						game->state = 3;
 					}
-					else if(game->state == 1)
+					else if(game->turns == 9){
+						game->state = 3;
+					}
+					else if(game->state == 1){
 						game->state = 2;
-					else game->state = 1;
+					}
+					else{						
+						game->state = 1;
+					}
 				}
 			break;
 			case 'q':
-				if(game->state != 4)
+				if(game->state != 4){
+					game->prev_state = game->state;
 					game->state = 4;
+				}
 			break;
 			case 'y':
 				if(game->state == 3)
-					initialize_rematch(game, p->symbol);
+					initialize_rematch(game, game->prev_state);
 				else if(game->state == 4)
 					game->state = 0;
 			break;
@@ -243,7 +258,7 @@ void process_command(struct ttt_game_state *game, struct ttt_player_state *p){
 				if(game ->state == 3)
 					game->state = 0;
 				else if(game->state == 4)
-					game->state = (int) p->symbol;
+					game->state = game->prev_state;
 			break;
 			default:
 				p->command = 0;
@@ -289,18 +304,18 @@ void process_player(struct ttt_game_state *game, struct ttt_player_state *p){
  
 int check_win(struct ttt_game_state *game, struct ttt_player_state *p){
 	
-	printf("Test %d\n", game->turns);
+	//printf("Test %d\n", game->turns);
 	fflush(stdout);
 	if(game->turns < 5){
-		printf("hello");
+		//printf("hello");
 		fflush(stdout);
 		return 0;
 	}
-	printf("helloooo");
+	//printf("helloooo");
 	fflush(stdout);
 	int i, j;
    
-	printf("Test");
+	//printf("Test");
 	fflush(stdout);
 	// Calculate the starting position for all rows within the game board
 	// Refactor 1
@@ -309,22 +324,28 @@ int check_win(struct ttt_game_state *game, struct ttt_player_state *p){
 		rows[i] = i * GAME_BOARD_COLS;
 	}
  
-	printf("Test2");
+	//printf("Test2");
 	fflush(stdout);
  
 	for(i = 1; i < GAME_BOARD_ROWS; i+=2){
+		if(check_equal_step(game->game_board, rows[i] + 1, p->symbol, 2, 3)){
+			printf("Horizontal win!\n");
+			fflush(stdout);
+			return 1;
+		}
+	
+	}
 		for(j = 1; j < GAME_BOARD_COLS; j+=2){
-			if(check_equal_step(game->game_board, rows[i] + j, p->symbol, GAME_BOARD_COLS * 2, 3)){
-				printf("Great wiiiin! \n");
+			if(check_equal_step(game->game_board, rows[1] + j, p->symbol, GAME_BOARD_COLS * 2, 3) ){
+				printf("Vertical win! \n");
 				fflush(stdout);
 				return 1;
 			}
 		}
-	}
-    printf("Test3");
+    //printf("Test3");
 	fflush(stdout);           
 			   
-   if(check_equal_step(game->game_board, rows[1] + 1, p->symbol, (GAME_BOARD_COLS * 2) + 2, 3) | check_equal_step(game->game_board, rows[5] + 1, p->symbol, (-1 * GAME_BOARD_COLS * 2) - 2, 3)){
+   if(check_equal_step(game->game_board, rows[1] + 1, p->symbol, (GAME_BOARD_COLS * 2) + 2, 3) | check_equal_step(game->game_board, rows[5] + 1, p->symbol, (-1 * GAME_BOARD_COLS * 2) + 2, 3)){
 	   printf("Great win! \n");
 	   fflush(stdout);
 	   return 1;
@@ -336,19 +357,20 @@ int check_win(struct ttt_game_state *game, struct ttt_player_state *p){
 }
  
 int check_equal_step(char *arr, char start, char symbol, char step, char instances){
-	printf("Testlkjdf");
+	//printf("Testlkjdf");
 	fflush(stdout);
  
 	char count = 0;
 	while(count < instances){
+		printf("Count: %d, Ind: %d\n", count, start + step * count);
 		if(arr[start + step * count] != symbol){
-			printf("No");
+			//printf("No");
 			fflush(stdout);
 			return 0;
 		}
 		count++;
 	}
-	printf("Yes");
+	//printf("Yes");
 	fflush(stdout);
 	return 1;
 }
