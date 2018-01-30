@@ -90,6 +90,8 @@ typedef struct ttt_game_state{
 	char *score_board;
 	// game board array
 	char *game_board;
+	// row starting positions array
+	char *rows;
                
 } ttt_game_state;
  
@@ -106,17 +108,14 @@ void place_score(struct ttt_game_state **game);
 void update_score(char *score_board, char p1, char p2);
 
 // Sets the BORDER spaces within the game board
-void place_border(char *game_board);
+void place_border(struct ttt_game_state **game);
 
 // Sets all valid PLACE spaces to EMPTY
-void clear_ttt(char *game_board);
+void clear_ttt(struct ttt_game_state **game);
 
 // Prints all values within the game board
 // Additionally, prints the players on top of the game board and prints the scoreboard to the screen
 void print_game(struct ttt_game_state *game);
-
-//
-void get_initials(struct ttt_player_state *p);
 
 // Clears the game board, and sets the current state to allow the previous winner to go first
 void initialize_rematch(struct ttt_game_state *game, char winner);
@@ -128,7 +127,7 @@ void process_command(struct ttt_game_state *game, struct ttt_player_state *p);
 // Handles various states of the game
 int process_game(struct ttt_game_state *game);
 
-// Process a turn for the current player
+// Reads input and passes input into player
 void process_player(struct ttt_game_state *game, struct ttt_player_state *p);
 
 // Returns 1 if the current game board has a valid winning placement for the input player
